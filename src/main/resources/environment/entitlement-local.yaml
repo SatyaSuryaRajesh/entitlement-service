@@ -1,0 +1,29 @@
+https:
+ host: "localhost"
+ port: "8082"
+ basepath: "/api/*"
+ response.timeout: "60000"
+ jks.path: "keystoreCertificate.jks"
+ alias: "mule2"
+ password: "![Exe1z+c7Qo0w+u5dG2qjdw==]"
+ keypassword: "![Exe1z+c7Qo0w+u5dG2qjdw==]"
+
+http:
+ host: "localhost"
+ port: "8082"
+ basepath: "/api/*"
+ response.timeout: "60000"
+
+tls:
+ key.password: "test123"
+ password: "test123"
+
+sys.entitlementdb:
+ host: "![f7mBEOLMiQL4YTrWvVNWIw==]"
+ port: "8081"
+ protocol: "HTTP"
+ basepath: "/api"
+ readpath: "/read"
+ response.timeout: "60000"
+ response.buffersize: "1024"
+ 

@@ -1,0 +1,26 @@
+[
+  {
+    "role_name": "sysadmin",
+    "action_name": "api_read",
+    "resource_name": "onboarding",
+    "condition_id": "cid1"
+  },
+  {
+    "role_name": "sysadmin",
+    "action_name": "api_write",
+    "resource_name": "onboarding",
+    "condition_id": "cid1"
+  },
+  {
+    "role_name": "sysadmin",
+    "action_name": "api_delete",
+    "resource_name": "onboarding",
+    "condition_id": "cid1"
+  },
+  {
+    "role_name": "sysadmin",
+    "action_name": "api_update",
+    "resource_name": "onboarding",
+    "condition_id": "cid1"
+  }
+]

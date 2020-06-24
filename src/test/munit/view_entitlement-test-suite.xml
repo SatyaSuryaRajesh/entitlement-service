@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="view_entitlement-test-suite.xml" />
+	<munit:test name="view_entitlement-test-suite-entitlement_flow_getTest" doc:id="ea5cfaaa-3a1f-4eb7-b14f-28f3b64441f9" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="7b58b645-451a-418a-938d-034a31e5c692" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="GET" attributeName="method" />
+					<munit-tools:with-attribute whereValue="Request to 'Entitlement System API'" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="HTTP_Request_View_Sys" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="/read" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:attributes value="#[{ method : 'GET', queryParams : { role : 'sysadmin', resource : 'onboarding'}, headers : {condition_type : 'country', condition_value : 'India'}}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="ff50e8a5-659a-4cf4-83e7-0575a8e65d1a" >
+				<munit:attributes value="#[{ method : 'GET', queryParams : { role : 'sysadmin'}, uriParams : {resource : 'onboarding'}, headers : {condition_type : 'country', condition_value : 'India'}}]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to entitlement_flow_get" doc:id="e7c54b33-2bdc-4df5-a7f2-4536209e9867" name="entitlement_flow_get"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b11bfefb-998a-4618-9a30-2e597eb4af2d" is="#[MunitTools::notNullValue()]" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

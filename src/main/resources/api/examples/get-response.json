@@ -1,0 +1,10 @@
+{
+  "roles": "sysadmin",
+  "resource": "onboarding",
+  "action": [
+    "api_read",
+    "api_write",
+    "api_delete",
+    "api_update"
+  ]
+}

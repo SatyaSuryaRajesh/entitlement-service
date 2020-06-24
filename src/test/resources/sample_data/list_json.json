@@ -1,0 +1,29 @@
+[
+  {
+    "role_name": "sysadmin",
+    "eid": 10,
+    "businessunit": "1",
+    "api_name": "onboard_api",
+    "action_name": "api_read",
+    "resource_id": 100,
+    "resource_name": "onboard"
+  },
+  {
+    "role_name": "sysadmin",
+    "eid": 10,
+    "businessunit": "1",
+    "api_name": "onboard_api",
+    "action_name": "api_write",
+    "resource_id": 100,
+    "resource_name": "onboard"
+  },
+  {
+    "role_name": "sysadmin",
+    "eid": 10,
+    "businessunit": "1",
+    "api_name": "onboard_api",
+    "action_name": "api_delete",
+    "resource_id": 100,
+    "resource_name": "onboard"
+  }
+]

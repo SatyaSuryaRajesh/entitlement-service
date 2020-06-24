@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: entitlement
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/3ccc0a1b-a340-40ec-b87d-a499123007fd/ # baseUri: capgemini-entitlement/api
+
+/entitlement:
+  /{resource}:
+    get:
+      displayName: View Entitlements
+      description: View Entitlement Details based on the given resource and role
+      queryParameters:
+        role:
+          required: true        
+
+      headers:
+        condition_type:
+          required: true
+          displayName: Validate Type
+          description: Condition to be validated type of a condition during entitlement.
+        condition_value:
+          required: true
+          displayName: Validate value
+          description: Condition to be validated value corresponding to the mentioned type during entitlement.
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/get-response.json
+        
+  post:
+    displayName: Create Entitlement
+    description: This service is used to create a new entitlement
+    body:
+      application/json:
+        example: !include examples/post-request.json
+    responses:
+      201:
+        body:
+          application/json:
+            example: !include examples/post-response.json
+
+        
+              
+          
+              
+            
+          
+          
+
+    

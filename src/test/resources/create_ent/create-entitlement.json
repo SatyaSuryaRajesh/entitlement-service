@@ -1,0 +1,41 @@
+[{
+			"action": [{
+					"action_id": "ac1",
+					"action_name": "api_read",
+					"role_name": "sysadmin",
+					"role_id": "ro1",
+					"condition_id": "cid1"
+				},
+				{
+					"action_id": "ac2",
+					"action_name": "api_write",
+					"role_name": "sysadmin",
+					"role_id": "ro1",
+					"condition_id": "cid1"
+				},
+				{
+					"action_id": "ac3",
+					"action_name": "api_delete",
+					"role_name": "sysadmin",
+					"role_id": "ro1",
+					"condition_id": "cid1"
+				}
+			]},
+	{
+
+		"condition": {
+			"condition_id": "cid1",
+			"condition_type": "country",
+			"condition_value": "India"
+		}
+	},
+	{
+
+		"entitlement": {
+			"entitlement_id": "en1",
+			"resource_id": "re1",
+			"resource_name": "onboarding",
+			"role_id": "ro1"
+		}
+	}
+]

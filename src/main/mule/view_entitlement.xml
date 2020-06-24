@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	
+		<flow name="entitlement_flow_get" doc:id="83f2f40d-45e7-4b40-aa0c-478f639aa235" >
+		<logger level="INFO" doc:name="Log Request Details" doc:id="995781e1-9b65-4393-b37c-709faee0783a" message="corellationId: #[correlationId]. executionPoint: 'request to get-entitlement-system API-flowStart'. resourceName: #[attributes.uriParams.resource]. roleName:#[attributes.queryParams.role]. conditionType:#[attributes.headers.condition_type]. conditionValue:#[attributes.headers.condition_value] payload is: #[payload]"/>
+		<http:request method="GET" doc:name="Request to 'Entitlement System API'" doc:id="8b5096bf-ff6b-4135-8402-ae9a7a4e8a4a" config-ref="HTTP_Request_View_Sys" path="${secure::sys.entitlementdb.readpath}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	condition_type : attributes.headers.condition_type,
+	condition_value : attributes.headers.condition_value
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	role : attributes.queryParams.role,
+	resource : attributes.uriParams.resource
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Log Entitlement response from DB" doc:id="4dc0c2f7-edab-47bf-a797-c18343680b2d" message="corellationId: #[correlationId]. executionPoint: 'response from get-entitlement-system API'. payload is: #[payload]"/>
+		<ee:transform doc:name="Final Output" doc:id="b4ab0008-7944-4ff3-a663-d6d9d8a71736" >
+			<ee:message >
+				<ee:set-payload resource="dwl/viewEntitlement/view-entitlement-final.dwl" />
+			
+</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Final Response" doc:id="416d74ba-0eca-43bc-9594-fd257edbe49b" message="corellationId: #[correlationId]. executionPoint: 'final contract - flowEnd'. payload is: #[payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a2a2e9cb-6c40-45b7-898a-53fc4c687b36" >
+				<ee:transform doc:name="Transform Message" doc:id="2aa71586-9390-4ea4-bd6a-4b8985746692" >
+					<ee:message >
+						<ee:set-payload resource="dwl/viewEntitlement/error-mainflow.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/viewEntitlement/status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow>
+	
+	</mule>

@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="in" format="json">
+      <types:shape format="weave" example="examples/test-1.json"><![CDATA[%dw 2.0
+
+type in = Array<{|  role_name: String,   action_name: String,   resource_name: String,   condition_name: String|}> {"example": "[{\\\"role_name\\\":\\\"sysadmin\\\",\\\"action_name\\\":\\\"api_read\\\",\\\"resource_name\\\":\\\"onboarding\\\",\\\"condition_name\\\":\\\"operation_admin\\\"},{\\\"role_name\\\":\\\"sysadmin\\\",\\\"action_name\\\":\\\"api_write\\\",\\\"resource_name\\\":\\\"onboarding\\\",\\\"condition_name\\\":\\\"operation_admin\\\"},{\\\"role_name\\\":\\\"sysadmin\\\",\\\"action_name\\\":\\\"api_delete\\\",\\\"resource_name\\\":\\\"onboarding\\\",\\\"condition_name\\\":\\\"operation_admin\\\"},{\\\"role_name\\\":\\\"sysadmin\\\",\\\"action_name\\\":\\\"api_update\\\",\\\"resource_name\\\":\\\"onboarding\\\",\\\"condition_name\\\":\\\"operation_admin\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#667ed083-2301-453d-b3e0-f537e8f1c786">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="in"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#5d47f40c-6373-4b4d-ab1b-831b263c7f8c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="in"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#64a834de-5681-4e08-9518-f1bf698e5cbe">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="in"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2b50eeea-9ce8-459c-abdb-fbb9135e11da"/>
+</types:mule>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="entitlement_flows_create" doc:id="3c144687-5bbf-4198-a986-8c6c6a43b6be" >
+		<logger level="INFO" doc:name="Request before create entitlement" doc:id="a2ddb36f-f76d-4113-895d-09dac4b00c8b" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Flow Start","payload":#[payload] }'/>
+		<set-variable value="#[payload]" doc:name="Original Payload" doc:id="e2611fa1-bf5f-40b0-9f47-832871786e97" variableName="originalPayloadVar"/>
+		<ee:transform doc:name="Transform request payload" doc:id="2b50eeea-9ce8-459c-abdb-fbb9135e11da" >
+			<ee:message >
+				<ee:set-payload resource="dwl/createEntitlement/request-create-entitlement.dwl" />
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="After Transformation" doc:id="d2e19c9e-4c75-4d76-a432-d5b323fcce89" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Before Sys DB check", "resourceName": #[vars.lookupVar.lookup.resource], "roleName":#[vars.lookupVar.lookup.role]. "conditionType":#[vars.lookupVar.lookup.cType], "conditionValue": #[vars.lookupVar.lookup.cValue],"payload":#[payload] }'/>
+		<scatter-gather doc:name="Lookup before executing create request" doc:id="a23b6698-edda-4288-bbf2-7f611995b1e0" >
+			<route >
+				<http:request method="GET" doc:name="Query Entitlement" doc:id="afa46a2f-04ed-4ecd-ba92-e35cf0743221" config-ref="HTTP_Request_View_Sys" path="/query/entitlement">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	resource : payload.condition.resource
+}]]]></http:query-params>
+				</http:request>
+				<set-variable value="#[payload]" doc:name="Response after Entitlement query" doc:id="1de61dec-1461-482d-a787-d35bc6225f88" variableName="entitlement_var"/>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Query Role" doc:id="44e79ac9-d9b1-4a41-a8b2-32be1940ebe9" config-ref="HTTP_Request_View_Sys" path="/query/role">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	role : payload.condition.role
+}]]]></http:query-params>
+				</http:request>
+				<set-variable value="#[payload]" doc:name="Response after Role query" doc:id="615291a5-8f32-433f-be60-b1061556ee94" variableName="role_var"/>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Query Condition" doc:id="be3d5f9f-6ed2-4867-85eb-a07838d62097" config-ref="HTTP_Request_View_Sys" path="/query/condition">
+					<http:headers ><![CDATA[#[output application/java
+---
+{
+	condition_type : payload.condition.conditionType,
+	condition_value : payload.condition.conditionValue
+}]]]></http:headers>
+				</http:request>
+				<set-variable value="#[payload]" doc:name="Response after Condition query" doc:id="a8f2a799-4b07-4927-bdf0-4ed225e13bd7" variableName="condition_var"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Summary of response after lookup" doc:id="cf457782-b209-476c-8203-93940b667693" >
+			<ee:message >
+				<ee:set-payload resource="dwl/createEntitlement/entitlement-validation-response.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Summary of response after lookup" doc:id="896bdf95-87b8-4359-8e18-2a162e7bd385" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- After DB check","payload":#[payload]}'/>
+		<choice doc:name="Routing logic based on lookup on Resource, Role and Condition" doc:id="86ad60b1-2291-456b-903b-a77a564a8047" >
+			<when expression="#[vars.entitlement_var == true and vars.condition_var == false]">
+				<flow-ref doc:name="insert into entitlement table" doc:id="e78663da-6ea7-4de7-8c49-ad4d35829bbe" name="insert_to_entitlement"/>
+				<logger level="INFO" doc:name="Response after new entitlement is created" doc:id="b50d6c2c-e837-419f-88ca-597d2ad644ea" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after create entitlement","payload":#[payload]}'/>
+				<choice doc:name="Routing based on role lookup" doc:id="d3907e35-1b53-4d16-b940-c4b982c9fa84" >
+					<when expression="#[vars.role_var == true]">
+						<flow-ref doc:name="insert into role table" doc:id="e8ad10b1-4334-4be5-979b-56f4b92ddb36" name="insert_to_role"/>
+						<ee:transform doc:name="Response after successful creation of entitlement and role" doc:id="7b352c5e-a0dd-4d28-92e1-b763f104a8ff">
+							<ee:message>
+								<ee:set-payload resource="dwl/createEntitlement/success-resource-role.dwl" />
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Response after successful creation of entitlement" doc:id="bf27d71b-e246-4beb-9874-afe0f9087519" >
+							<ee:message >
+								<ee:set-payload resource="dwl/createEntitlement/success-resource.dwl" />
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="Response after successful creation of entitlement and role" doc:id="c010edca-8453-425d-86d7-603df6f66531" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after  resource creation","payload":#[payload]}'/>
+					</otherwise>
+				</choice>
+				<logger level="INFO" doc:name="Response after successful creation of entitlement and/or role" doc:id="426f6dcd-8f21-4e25-bff6-efe3d870a36d" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after creating entitlement and/or role - End","payload":#[payload]}'/>
+			</when>
+			<when expression="#[vars.condition_var == true and vars.entitlement_var == false]">
+				<flow-ref doc:name="insert into condition table" doc:id="ffe19ed2-1275-49cb-8e40-6cdcf5f75518" name="insert_to_condition"/>
+				<logger level="INFO" doc:name="Response after new condition is created" doc:id="7343de52-5066-4f49-b02f-5db591d38bd1" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after create condition","payload":#[payload]}'/>
+				<choice doc:name="Routing based on role lookup" doc:id="5ed6dc50-6de2-46ca-935a-dcb323a8db1c" >
+					<when expression="#[vars.role_var == true]">
+						<flow-ref doc:name="insert into role table" doc:id="3be25bc4-ad27-4870-9109-b830d1b15eb6" name="insert_to_role"/>
+						<ee:transform doc:name="Response after successful creation of condition and role" doc:id="8d6daacb-8b31-4c42-97d3-f7b220b1ae01" >
+							<ee:message >
+								<ee:set-payload resource="dwl/createEntitlement/success-condition-role.dwl" />
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Response after successful creation of condition" doc:id="5ca5547c-76af-48a3-b79c-82fe51be1940" >
+							<ee:message >
+								<ee:set-payload resource="dwl/createEntitlement/success-condition.dwl" />
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="Response after successful creation of condition" doc:id="d76b4ad5-8b60-4692-b0a9-3cf535f40696" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after creating condition","payload":#[payload]}'/>
+					</otherwise>
+				</choice>
+				<logger level="INFO" doc:name="Response after successful creation of condition and/or role" doc:id="8ecd738f-dbb0-485c-ad70-38fc4f1af065" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after creating condition and/or role - End","payload":#[payload]}'/>
+			</when>
+			<when expression="vars.condition_var == false and vars.entitlement_var == false">
+				<ee:transform doc:name="Handling duplicate request" doc:id="8f21e1b7-94b4-4f42-bbfb-352dae52b4bd">
+					<ee:message>
+						<ee:set-payload resource="dwl/createEntitlement/duplicate.dwl" />
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Response after transformation" doc:id="c562c26c-e9a6-459d-91e7-932bb65636ea" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after duplicate request","payload":#[payload]}' />
+			</when>
+			<otherwise>
+				<flow-ref doc:name="insert into entitlement table" doc:id="9553597a-9e8a-49a9-b837-b82b16eaffd3" name="insert_to_entitlement"/>
+				<flow-ref doc:name="insert into condition table" doc:id="5dd139c0-6a70-4504-bbfc-5141fdf9a2ae" name="insert_to_condition"/>
+				<flow-ref doc:name="insert into role table" doc:id="86db97b4-c2a0-4734-81c8-a2c281b34d7e" name="insert_to_role"/>
+				<ee:transform doc:name="response after all the tables are updated" doc:id="1ef7ae99-39d3-44e8-8ecf-9239a025c9bb">
+					<ee:message>
+						<ee:set-payload resource="dwl/createEntitlement/success-entitlement-condition-role.dwl" />
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="response after all the tables are updated" doc:id="2fb016ba-85e2-4fa8-8f7a-35534652c5b0" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- response after create Entitlement, Condition and Role","payload":#[payload]}'/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Response at the end of create request" doc:id="9ce16ece-c051-483f-aa65-f825e6acc645" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Flow End","payload":#[payload] }'/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0c4a9cd0-d96a-4ec4-bf47-7e75ab7df72a" >
+				<ee:transform doc:name="Transform Message" doc:id="8f3480dd-0a1f-452c-9925-cdef3afe8a22" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-mainflow.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="insert_to_entitlement" doc:id="2f745d03-50fe-4fa6-a3c3-0cf17399a6fc" >
+		<set-payload value="#[vars.originalPayloadVar]" doc:name="Set original payload" doc:id="4b7c082d-c1ee-4f75-9abb-dc34e73cbd68" />
+		<logger level="INFO" doc:name="Log original payload" doc:id="ea6fefd8-2ad1-4a2f-bcd1-906306b9ec1c" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Before insert into Entitlement table","payload":#[payload] }' />
+		<http:request method="POST" doc:name="Request to create entitlement - system api" doc:id="918744cd-85b4-42b0-8c42-79be51b43c15" path="/create/entitlement" config-ref="HTTP_Request_View_Sys"/>
+		<logger level="INFO" doc:name="Response after create entitlement - system api" doc:id="ec2e0aa5-e2b0-4c99-a763-5daeea9231f6" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- After insert into Entitlement table","payload":#[payload] }'/>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3b569413-c441-4d23-a3f0-e1fc461b85aa" >
+				<ee:transform doc:name="Transform Message" doc:id="8cdc27c5-fdcd-48d3-a0a4-616429f6779c" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-subflow.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="insert_to_role" doc:id="d7419b23-652f-4d1a-a7d1-d6df16c7ce16" >
+		<set-payload value="#[vars.originalPayloadVar]" doc:name="Set original payload" doc:id="e20d93a5-74c6-49b9-85f8-baabcb40192b" />
+		<logger level="INFO" doc:name="Log original payload" doc:id="48cceaec-8a57-46aa-a561-d10fa56e55fc" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Before insert into Role table","payload":#[payload] }' />
+		<http:request method="POST" doc:name="Request to create role- system api" doc:id="d4adb401-3b09-48fa-a06f-7b8e5c6b5501" path="/create/role" config-ref="HTTP_Request_View_Sys"/>
+		<logger level="INFO" doc:name="Response after create role- system api" doc:id="a7dfcd3b-d752-4dd8-831a-06fb417f523e" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- After insert into Role table","payload":#[payload] }'/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="02e3ee42-27eb-4da5-b7a4-09c7850b7f01" >
+				<ee:transform doc:name="Transform Message" doc:id="948abb26-fad4-4cb3-9b82-904da3706499" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-subflow.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="insert_to_condition" doc:id="fb6e359f-b9f6-4c71-8d51-7451c4af59f3" >
+		<set-payload value="#[vars.originalPayloadVar]" doc:name="Set original payload" doc:id="ee91bdb5-02a5-44e9-ae35-37aa148524fd" />
+		<logger level="INFO" doc:name="Log original payload" doc:id="1a986208-00b8-4644-b762-53acc9b045fe" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- Before insert into Condition table","payload":#[payload] }' />
+		<http:request method="POST" doc:name="Request to create condition- system api" doc:id="8c2a83ff-de2c-4ff5-8454-f93741fe8517" path="/create/condition" config-ref="HTTP_Request_View_Sys"/>
+		<logger level="INFO" doc:name="Response after create condition- system api" doc:id="09b925cd-8040-44ad-9985-ff9cd7fdaaec" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - Process- After insert into Condition table","payload":#[payload] }'/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6b985f17-97b0-409e-9bc0-b603ae63e337" >
+				<ee:transform doc:name="Transform Message" doc:id="2a458eab-d96f-4172-9635-3d14bd23e374" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-subflow.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
